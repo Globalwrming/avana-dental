@@ -1181,24 +1181,13 @@ function Admin({ onLogout, config, onConfigChange }) {
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      // Use no-cors with a script tag trick to bypass CORS
-      const url = SHEETS_READ_URL + "?action=getLeads&callback=handleLeads";
-      await new Promise((resolve, reject) => {
-        window.handleLeads = (data) => {
-          if (data && data.leads && data.leads.length > 0) {
-            setLeads(data.leads);
-            setLastFetch(new Date().toLocaleTimeString());
-          }
-          delete window.handleLeads;
-          document.body.removeChild(script);
-          resolve();
-        };
-        const script = document.createElement("script");
-        script.src = url;
-        script.onerror = () => { reject(); resolve(); };
-        document.body.appendChild(script);
-        setTimeout(resolve, 5000); // timeout after 5s
-      });
+      const res = await fetch(SHEETS_READ_URL, { redirect: "follow" });
+      const text = await res.text();
+      const data = JSON.parse(text);
+      if (data && data.leads) {
+        setLeads(data.leads.length > 0 ? data.leads : SAMPLE_LEADS);
+        setLastFetch(new Date().toLocaleTimeString());
+      }
     } catch(e) {
       console.warn("Could not fetch leads:", e);
     }
