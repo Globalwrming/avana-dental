@@ -24,7 +24,10 @@ import { useState, useEffect, useRef, useReducer, useCallback } from "react";
 //  }
 //
 // 3. Copy the Web App URL and paste it below:
+// POST URL — receives lead data from funnel
 const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwZn1JRSOTLcWnjrE5M38Yz4seVVxGcuhTN3wkHmyE45KGgLkJpM3pUfHpY_TOeNXVxvA/exec";
+// GET URL — reads leads for admin panel
+const SHEETS_READ_URL = "https://script.google.com/macros/s/AKfycbwLkwnAbbgXX2sgZhgEslPHMNfxdTvLJv1pd2AQpS8ICCYfExRuBRU34NjO8R2X85i0dg/exec";
 
 function sendToSheets(data) {
   if (SHEETS_URL.includes("YOUR_SCRIPT_ID")) {
@@ -1178,12 +1181,24 @@ function Admin({ onLogout, config, onConfigChange }) {
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      const res = await fetch(SHEETS_URL + "?action=getLeads");
-      const data = await res.json();
-      if (data && data.leads && data.leads.length > 0) {
-        setLeads(data.leads);
-        setLastFetch(new Date().toLocaleTimeString());
-      }
+      // Use no-cors with a script tag trick to bypass CORS
+      const url = SHEETS_READ_URL + "?action=getLeads&callback=handleLeads";
+      await new Promise((resolve, reject) => {
+        window.handleLeads = (data) => {
+          if (data && data.leads && data.leads.length > 0) {
+            setLeads(data.leads);
+            setLastFetch(new Date().toLocaleTimeString());
+          }
+          delete window.handleLeads;
+          document.body.removeChild(script);
+          resolve();
+        };
+        const script = document.createElement("script");
+        script.src = url;
+        script.onerror = () => { reject(); resolve(); };
+        document.body.appendChild(script);
+        setTimeout(resolve, 5000); // timeout after 5s
+      });
     } catch(e) {
       console.warn("Could not fetch leads:", e);
     }
