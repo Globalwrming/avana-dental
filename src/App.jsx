@@ -1171,11 +1171,32 @@ function Admin({ onLogout, config, onConfigChange }) {
   const [tab,setTab]=useState("dashboard");
   const [filt,setFilt]=useState("ALL");
   const [expQ,setExpQ]=useState(null);
-  const high=SAMPLE_LEADS.filter(l=>l.lead_tag==="HIGH_INTENT").length;
-  const med=SAMPLE_LEADS.filter(l=>l.lead_tag==="MEDIUM_INTENT").length;
-  const low=SAMPLE_LEADS.filter(l=>l.lead_tag==="LOW_INTENT").length;
-  const total=SAMPLE_LEADS.length;
-  const shown=filt==="ALL"?SAMPLE_LEADS:SAMPLE_LEADS.filter(l=>l.lead_tag===filt);
+  const [leads,setLeads]=useState(SAMPLE_LEADS);
+  const [loading,setLoading]=useState(false);
+  const [lastFetch,setLastFetch]=useState(null);
+
+  const fetchLeads = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(SHEETS_URL + "?action=getLeads");
+      const data = await res.json();
+      if (data && data.leads && data.leads.length > 0) {
+        setLeads(data.leads);
+        setLastFetch(new Date().toLocaleTimeString());
+      }
+    } catch(e) {
+      console.warn("Could not fetch leads:", e);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchLeads(); }, []);
+
+  const high=leads.filter(l=>l.lead_tag==="HIGH_INTENT").length;
+  const med=leads.filter(l=>l.lead_tag==="MEDIUM_INTENT").length;
+  const low=leads.filter(l=>l.lead_tag==="LOW_INTENT").length;
+  const total=leads.length;
+  const shown=filt==="ALL"?leads:leads.filter(l=>l.lead_tag===filt);
   const tl={immediately:"ASAP","3_months":"3 mo","3_6_months":"3–6 mo",researching:"Research"};
   const tthl={"1-2":"1–2",several:"Several",most_all:"Most/All"};
   const tc=t=>t==="HIGH_INTENT"?"hi":t==="MEDIUM_INTENT"?"med":"lo";
@@ -1203,7 +1224,7 @@ function Admin({ onLogout, config, onConfigChange }) {
       <div className="adm-main">
         {tab==="dashboard"&&(
           <>
-            <div className="adm-topbar"><h2>Dashboard</h2><div className="adm-actions"><button className="adm-btn primary" onClick={()=>setTab("leads")}>View All Leads</button></div></div>
+            <div className="adm-topbar"><h2>Dashboard</h2><div className="adm-actions">{lastFetch&&<span style={{fontSize:12,color:"rgba(255,255,255,.3)",marginRight:8}}>Updated {lastFetch}</span>}<button className="adm-btn" onClick={fetchLeads} disabled={loading}>{loading?"Refreshing...":"↻ Refresh"}</button><button className="adm-btn primary" onClick={()=>setTab("leads")}>View All Leads</button></div></div>
             <div className="adm-content">
               <div className="stat-grid">
                 <div className="stat-card"><div className="stat-lbl">Total Leads</div><div className="stat-val">{total}</div><div className="stat-sub">All time</div></div>
@@ -1228,7 +1249,7 @@ function Admin({ onLogout, config, onConfigChange }) {
         )}
         {tab==="leads"&&(
           <>
-            <div className="adm-topbar"><h2>Leads</h2><div className="adm-actions"><button className="adm-btn" onClick={exportCSV}>⬇ Export CSV</button></div></div>
+            <div className="adm-topbar"><h2>Leads</h2><div className="adm-actions"><button className="adm-btn" onClick={fetchLeads} disabled={loading}>{loading?"Refreshing...":"↻ Refresh"}</button><button className="adm-btn" onClick={exportCSV}>⬇ Export CSV</button></div></div>
             <div className="adm-content">
               <div className="adm-tbl-wrap">
                 <div className="adm-tbl-head">
