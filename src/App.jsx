@@ -566,10 +566,16 @@ function Funnel({ onComplete, config }) {
 
   useEffect(() => { setSelOpt(null); setSk(k=>k+1); }, [screen]);
 
+  const submittedRef = useRef(false);
+
   useEffect(() => {
     if (screen !== 6) return;
     const iv = setInterval(() => setMsgIdx(i=>(i+1)%msgs.length), 900);
-    sendToSheets({ id:Date.now(), first_name:firstName, phone, missing_teeth:answers.missing_teeth||"", timeline:answers.timeline||"", consulted_before:answers.consulted_before||"", lead_tag:tag, booked_date:"", booked_time:"" });
+    // Guard against double submission
+    if (!submittedRef.current) {
+      submittedRef.current = true;
+      sendToSheets({ id:Date.now(), first_name:firstName, phone, missing_teeth:answers.missing_teeth||"", timeline:answers.timeline||"", consulted_before:answers.consulted_before||"", lead_tag:tag, booked_date:"", booked_time:"" });
+    }
     const t = setTimeout(() => { clearInterval(iv); onComplete(tag, firstName); }, 2800);
     return () => { clearInterval(iv); clearTimeout(t); };
   }, [screen]);
@@ -583,7 +589,7 @@ function Funnel({ onComplete, config }) {
     setTimeout(() => {
       if (opt.redirect==="PARTIAL")    { onComplete("PARTIAL", firstName);    return; }
       if (opt.redirect==="LOW_INTENT") {
-        sendToSheets({ id:Date.now(), first_name:firstName, phone, missing_teeth:answers.missing_teeth||"", timeline:opt.value, consulted_before:"", lead_tag:"LOW_INTENT", booked_date:"", booked_time:"" });
+        sendToSheets({ id:Date.now(), first_name:firstName, phone:phoneRef.current||phone, missing_teeth:answers.missing_teeth||"", timeline:opt.value, consulted_before:"", lead_tag:"LOW_INTENT", booked_date:"", booked_time:"" });
         onComplete("LOW_INTENT", firstName);
         return;
       }
@@ -591,11 +597,14 @@ function Funnel({ onComplete, config }) {
     }, 300);
   }, [screen, firstName, phone, answers, getQ, onComplete]);
 
+  const phoneRef = useRef("");
+
   const goNext = () => {
     const ne = !nameVal.trim() ? "Please enter your name." : "";
     const pe = phoneVal.replace(/\D/g,"").length < 7 ? "Please enter a valid phone number." : "";
     setNameErr(ne); setPhoneErr(pe);
     if (ne || pe) return;
+    phoneRef.current = phoneVal.trim();
     d({ type:"NAME", v:nameVal.trim() });
     d({ type:"PHONE", v:phoneVal.trim() });
     d({ type:"SCREEN", v:2 });
