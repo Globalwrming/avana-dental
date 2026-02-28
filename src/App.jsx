@@ -27,7 +27,7 @@ import { useState, useEffect, useRef, useReducer, useCallback } from "react";
 // POST URL — receives lead data from funnel
 const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwZn1JRSOTLcWnjrE5M38Yz4seVVxGcuhTN3wkHmyE45KGgLkJpM3pUfHpY_TOeNXVxvA/exec";
 // GET URL — reads leads for admin panel
-const SHEETS_READ_URL = "https://script.google.com/macros/s/AKfycbwLkwnAbbgXX2sgZhgEslPHMNfxdTvLJv1pd2AQpS8ICCYfExRuBRU34NjO8R2X85i0dg/exec";
+const SHEETS_READ_URL = "https://script.google.com/macros/s/AKfycbyMY8ISUsCpfD-gJaYfwAooS__utY-MpbRivpSc9FksdXFs9mhkw08Ih55c9RsUcwLW/exec";
 
 function sendToSheets(data) {
   if (SHEETS_URL.includes("YOUR_SCRIPT_ID")) {
