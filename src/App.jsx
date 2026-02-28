@@ -787,7 +787,8 @@ function Calendar({ type, name, onBooked }) {
             <button className="btn-confirm" onClick={()=>{
               const info={date:fmtD(selDate),time:selSlot};
               setStep("booked"); onBooked(info);
-              sendToSheets({id:Date.now(),first_name:name,phone:"",missing_teeth:"",timeline:"",consulted_before:"",lead_tag:type+"_BOOKED",booked_date:info.date,booked_time:info.time});
+              // Find the original lead by name and update it instead of creating new row
+              sendToSheets({action:"book",first_name:name,lead_tag:type,booked_date:info.date,booked_time:info.time});
             }}>{c.btn} →</button>
             <button className="btn-text" onClick={()=>setStep("time")}>← Change time</button>
           </>
@@ -1247,12 +1248,14 @@ function Admin({ onLogout, config, onConfigChange }) {
               </div>
               <div className="adm-tbl-wrap">
                 <table className="adm-tbl">
-                  <thead><tr><th>Name</th><th>Phone</th><th>Teeth</th><th>Timeline</th><th>Tag</th><th>Date</th></tr></thead>
-                  <tbody>{SAMPLE_LEADS.slice(0,6).map(l=>(
+                  <thead><tr><th>Name</th><th>Phone</th><th>Teeth</th><th>Timeline</th><th>Tag</th><th>Booked</th><th>Date</th></tr></thead>
+                  <tbody>{leads.slice(0,6).map(l=>(
                     <tr key={l.id}>
                       <td className="name-cell">{l.first_name}</td><td className="mono">{l.phone}</td>
                       <td>{tthl[l.missing_teeth]||l.missing_teeth}</td><td>{tl[l.timeline]||l.timeline}</td>
-                      <td><span className={`tag ${tc(l.lead_tag)}`}>{ts(l.lead_tag)}</span></td><td>{l.created_at}</td>
+                      <td><span className={`tag ${tc(l.lead_tag)}`}>{ts(l.lead_tag)}</span></td>
+                      <td>{l.booked==="YES"?<span style={{color:"#6EE7B7",fontWeight:600}}>✓ Yes</span>:<span style={{color:"rgba(255,255,255,.25)"}}>No</span>}</td>
+                      <td>{l.created_at}</td>
                     </tr>
                   ))}</tbody>
                 </table>
@@ -1274,14 +1277,17 @@ function Admin({ onLogout, config, onConfigChange }) {
                   </div>
                 </div>
                 <table className="adm-tbl">
-                  <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Teeth</th><th>Timeline</th><th>Consulted</th><th>Tag</th><th>Date</th></tr></thead>
+                  <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Teeth</th><th>Timeline</th><th>Consulted</th><th>Tag</th><th>Booked</th><th>Booked Date</th><th>Date</th></tr></thead>
                   <tbody>{shown.map(l=>(
                     <tr key={l.id}>
                       <td style={{color:"rgba(255,255,255,.18)"}}>{l.id}</td>
                       <td className="name-cell">{l.first_name}</td><td className="mono">{l.phone}</td>
                       <td>{tthl[l.missing_teeth]||l.missing_teeth}</td><td>{tl[l.timeline]||l.timeline}</td>
                       <td>{l.consulted_before}</td>
-                      <td><span className={`tag ${tc(l.lead_tag)}`}>{ts(l.lead_tag)}</span></td><td>{l.created_at}</td>
+                      <td><span className={`tag ${tc(l.lead_tag)}`}>{ts(l.lead_tag)}</span></td>
+                      <td>{l.booked==="YES"?<span style={{color:"#6EE7B7",fontWeight:600}}>✓ Yes</span>:<span style={{color:"rgba(255,255,255,.25)"}}>No</span>}</td>
+                      <td style={{fontSize:12}}>{l.booked_date}{l.booked_time?" "+l.booked_time:""}</td>
+                      <td>{l.created_at}</td>
                     </tr>
                   ))}</tbody>
                 </table>
