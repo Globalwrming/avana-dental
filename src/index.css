@@ -11,10 +11,9 @@ html, body, #root {
 }
 ```
 
-Save with **Ctrl + S**.
-
-Then in your terminal:
+4. Save with **Ctrl + S**
+5. Then run in terminal:
 ```
 git add .
-git commit -m "fix white space"
+git commit -m "fix css"
 git push
